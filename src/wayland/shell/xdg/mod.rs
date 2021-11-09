@@ -915,6 +915,11 @@ impl std::cmp::PartialEq for ToplevelSurface {
 }
 
 impl ToplevelSurface {
+    /// TODO
+    pub fn version(&self) -> u32 {
+        self.shell_surface.as_ref().version()
+    }
+
     /// Is the toplevel surface referred by this handle still alive?
     pub fn alive(&self) -> bool {
         self.shell_surface.as_ref().is_alive() && self.wl_surface.as_ref().is_alive()
