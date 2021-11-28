@@ -676,6 +676,78 @@ pub struct Size<N, Kind> {
     _kind: std::marker::PhantomData<Kind>,
 }
 
+impl<N: Sub<Output = N>, Kind> Sub<Size<N, Kind>> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn sub(self, other: Size<N, Kind>) -> Size<N, Kind> {
+        Self {
+            w: self.w - other.w,
+            h: self.h - other.h,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Div<Output = N> + Copy, Kind> Div<N> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn div(self, n: N) -> Size<N, Kind> {
+        Self {
+            w: self.w / n,
+            h: self.h / n,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Div<Output = N> + Copy, Kind> Div<N> for Point<N, Kind> {
+    type Output = Point<N, Kind>;
+    #[inline]
+    fn div(self, n: N) -> Point<N, Kind> {
+        Self {
+            x: self.x / n,
+            y: self.y / n,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Mul<Output = N> + Copy, Kind> Mul<N> for Point<N, Kind> {
+    type Output = Point<N, Kind>;
+    #[inline]
+    fn mul(self, n: N) -> Point<N, Kind> {
+        Self {
+            x: self.x * n,
+            y: self.y * n,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Mul<Output = N>, Kind> Mul<Size<N, Kind>> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn mul(self, other: Size<N, Kind>) -> Size<N, Kind> {
+        Self {
+            w: self.w * other.w,
+            h: self.h * other.h,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Mul<Output = N> + Copy, Kind> Mul<N> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn mul(self, n: N) -> Size<N, Kind> {
+        Self {
+            w: self.w * n,
+            h: self.h * n,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
 impl<N: Coordinate, Kind> Size<N, Kind> {
     /// Convert this [`Size`] to a [`Point`] with the same coordinates
     #[inline]
@@ -975,6 +1047,60 @@ impl<N: Coordinate + Div<Output = N>, Kind> Div<Size<N, Kind>> for Size<N, Kind>
     }
 }
 
+impl<N: Add<Output = N>, Kind> Add<Point<N, Kind>> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn add(self, other: Point<N, Kind>) -> Size<N, Kind> {
+        Size {
+            w: self.w + other.x,
+            h: self.h + other.y,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Sub<Output = N> + fmt::Debug + PartialOrd, Kind> Sub<Point<N, Kind>> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn sub(self, other: Point<N, Kind>) -> Size<N, Kind> {
+        debug_assert!(
+            self.w >= other.x && self.h >= other.y,
+            "Attempting to subtract bigger point from a smaller size: {:?} - {:?}",
+            (&self.w, &self.h),
+            (&other.x, &other.y),
+        );
+
+        Size {
+            w: self.w - other.x,
+            h: self.h - other.y,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: AddAssign, Kind> AddAssign<Point<N, Kind>> for Size<N, Kind> {
+    #[inline]
+    fn add_assign(&mut self, other: Point<N, Kind>) {
+        self.w += other.x;
+        self.h += other.y;
+    }
+}
+
+impl<N: SubAssign + fmt::Debug + PartialOrd, Kind> SubAssign<Point<N, Kind>> for Size<N, Kind> {
+    #[inline]
+    fn sub_assign(&mut self, other: Point<N, Kind>) {
+        debug_assert!(
+            self.w >= other.x && self.h >= other.y,
+            "Attempting to subtract bigger point from a smaller size: {:?} - {:?}",
+            (&self.w, &self.h),
+            (&other.x, &other.y),
+        );
+
+        self.w -= other.x;
+        self.h -= other.y;
+    }
+}
+
 impl<N: Clone, Kind> Clone for Size<N, Kind> {
     #[inline]
     fn clone(&self) -> Self {
@@ -1027,6 +1153,22 @@ impl<N: Coordinate, Kind> Sub<Size<N, Kind>> for Point<N, Kind> {
             y: self.y.saturating_sub(other.h),
             _kind: std::marker::PhantomData,
         }
+    }
+}
+
+impl<N: AddAssign, Kind> AddAssign<Size<N, Kind>> for Point<N, Kind> {
+    #[inline]
+    fn add_assign(&mut self, other: Size<N, Kind>) {
+        self.x += other.w;
+        self.y += other.h;
+    }
+}
+
+impl<N: SubAssign, Kind> SubAssign<Size<N, Kind>> for Point<N, Kind> {
+    #[inline]
+    fn sub_assign(&mut self, other: Size<N, Kind>) {
+        self.x -= other.w;
+        self.y -= other.h;
     }
 }
 
