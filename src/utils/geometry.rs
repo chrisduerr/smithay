@@ -1,5 +1,5 @@
 use std::fmt;
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Div, Mul};
 
 #[cfg(feature = "wayland_frontend")]
 use wayland_server::protocol::wl_output::Transform as WlTransform;
@@ -551,6 +551,90 @@ pub struct Size<N, Kind> {
     /// vertical coordinate
     pub h: N,
     _kind: std::marker::PhantomData<Kind>,
+}
+
+impl<N: Sub<Output = N>, Kind> Sub<Size<N, Kind>> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn sub(self, other: Size<N, Kind>) -> Size<N, Kind> {
+        Self {
+            w: self.w - other.w,
+            h: self.h - other.h,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Div<Output = N>, Kind> Div<Size<N, Kind>> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn div(self, other: Size<N, Kind>) -> Size<N, Kind> {
+        Self {
+            w: self.w / other.w,
+            h: self.h / other.h,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Div<Output = N> + Copy, Kind> Div<N> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn div(self, n: N) -> Size<N, Kind> {
+        Self {
+            w: self.w / n,
+            h: self.h / n,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Div<Output = N> + Copy, Kind> Div<N> for Point<N, Kind> {
+    type Output = Point<N, Kind>;
+    #[inline]
+    fn div(self, n: N) -> Point<N, Kind> {
+        Self {
+            x: self.x / n,
+            y: self.y / n,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Mul<Output = N> + Copy, Kind> Mul<N> for Point<N, Kind> {
+    type Output = Point<N, Kind>;
+    #[inline]
+    fn mul(self, n: N) -> Point<N, Kind> {
+        Self {
+            x: self.x * n,
+            y: self.y * n,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Mul<Output = N>, Kind> Mul<Size<N, Kind>> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn mul(self, other: Size<N, Kind>) -> Size<N, Kind> {
+        Self {
+            w: self.w * other.w,
+            h: self.h * other.h,
+            _kind: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<N: Mul<Output = N> + Copy, Kind> Mul<N> for Size<N, Kind> {
+    type Output = Size<N, Kind>;
+    #[inline]
+    fn mul(self, n: N) -> Size<N, Kind> {
+        Self {
+            w: self.w * n,
+            h: self.h * n,
+            _kind: std::marker::PhantomData,
+        }
+    }
 }
 
 impl<N: Coordinate, Kind> Size<N, Kind> {
