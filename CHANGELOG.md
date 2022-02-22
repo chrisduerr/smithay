@@ -6,6 +6,7 @@
 
 #### Clients & Protocols
 
+- **[Breaking]** Touch events now return `TouchSlot` instead of `Option<TouchSlot>`
 - Remove `xdg-shell-unstable-v6` backwards compatibility
 - `XdgPositionerState` moved to `XdgPopupState` and added to `XdgRequest::NewPopup`
 - `PopupSurface::send_configure` now checks the protocol version and returns an `Result`
@@ -15,6 +16,7 @@
 - Remove `Other` and add `Forward` and `Back` variants to `MouseButton`. Use the new `PointerButtonEvent::button_code` in place of `Other`.
 - `GrabStartData` has been renamed to `PointerGrabStartData`
 - The `slot` method on touch events no longer returns an `Option` and multi-touch capability is thus opaque to the compositor
+- Touch client capability support using `Seat::add_touch`
 
 #### Backends
 
