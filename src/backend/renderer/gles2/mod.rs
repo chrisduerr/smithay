@@ -1,21 +1,15 @@
 //! Implementation of the rendering traits using OpenGL ES 2
 
+use std::borrow::Cow;
+use std::convert::TryFrom;
+use std::ffi::CStr;
+use std::{fmt, ptr, mem, slice};
+use std::rc::Rc;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::{collections::HashSet, os::raw::c_char};
+use std::sync::atomic::{Ordering, AtomicPtr};
+
 use cgmath::{prelude::*, Matrix3, Vector2};
-use core::slice;
-use std::{
-    borrow::Cow,
-    collections::HashSet,
-    convert::TryFrom,
-    ffi::CStr,
-    fmt,
-    os::raw::c_char,
-    ptr,
-    rc::Rc,
-    sync::{
-        atomic::{AtomicPtr, Ordering},
-        mpsc::{channel, Receiver, Sender},
-    },
-};
 
 mod shaders;
 mod version;
@@ -1691,7 +1685,7 @@ impl Renderer for Gles2Renderer {
 
     fn render<F, R>(
         &mut self,
-        size: Size<i32, Physical>,
+        mut size: Size<i32, Physical>,
         transform: Transform,
         rendering: F,
     ) -> Result<R, Self::Error>
@@ -1710,6 +1704,11 @@ impl Renderer for Gles2Renderer {
 
             self.gl.Enable(ffi::BLEND);
             self.gl.BlendFunc(ffi::ONE, ffi::ONE_MINUS_SRC_ALPHA);
+        }
+
+        // Handle the width/height swap when the output is rotated by 90°/270°.
+        if let Transform::_90 | Transform::_270 | Transform::Flipped90 | Transform::Flipped270 = transform {
+            mem::swap(&mut size.w, &mut size.h);
         }
 
         // replicate https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glOrtho.xml
