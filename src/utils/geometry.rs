@@ -1,7 +1,6 @@
 use std::fmt;
 use std::ops::{Add, AddAssign, Sub, SubAssign, Div, Mul};
 
-#[cfg(feature = "wayland_frontend")]
 use wayland_server::protocol::wl_output::Transform as WlTransform;
 
 /// Type-level marker for the logical coordinate space
@@ -1365,7 +1364,6 @@ impl Transform {
     }
 }
 
-#[cfg(feature = "wayland_frontend")]
 impl From<Transform> for WlTransform {
     fn from(transform: Transform) -> Self {
         match transform {
