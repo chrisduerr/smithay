@@ -227,6 +227,10 @@ impl backend::Event<LibinputInputBackend> for event::pointer::PointerMotionAbsol
 
 impl backend::PointerMotionAbsoluteEvent<LibinputInputBackend>
     for event::pointer::PointerMotionAbsoluteEvent
+{}
+
+impl backend::PositionEvent<LibinputInputBackend>
+    for event::pointer::PointerMotionAbsoluteEvent
 {
     fn x(&self) -> f64 {
         self.absolute_x()
@@ -255,11 +259,15 @@ impl backend::Event<LibinputInputBackend> for event::touch::TouchDownEvent {
     }
 }
 
-impl backend::TouchDownEvent<LibinputInputBackend> for event::touch::TouchDownEvent {
+impl backend::TouchDownEvent<LibinputInputBackend> for event::touch::TouchDownEvent {}
+
+impl backend::TouchEvent<LibinputInputBackend> for event::touch::TouchDownEvent {
     fn slot(&self) -> backend::TouchSlot {
         event::touch::TouchEventSlot::slot(self).into()
     }
+}
 
+impl backend::PositionEvent<LibinputInputBackend> for event::touch::TouchDownEvent {
     fn x(&self) -> f64 {
         event::touch::TouchEventPosition::x(self)
     }
@@ -287,11 +295,15 @@ impl backend::Event<LibinputInputBackend> for event::touch::TouchMotionEvent {
     }
 }
 
-impl backend::TouchMotionEvent<LibinputInputBackend> for event::touch::TouchMotionEvent {
+impl backend::TouchMotionEvent<LibinputInputBackend> for event::touch::TouchMotionEvent {}
+
+impl backend::TouchEvent<LibinputInputBackend> for event::touch::TouchMotionEvent {
     fn slot(&self) -> backend::TouchSlot {
         event::touch::TouchEventSlot::slot(self).into()
     }
+}
 
+impl backend::PositionEvent<LibinputInputBackend> for event::touch::TouchMotionEvent {
     fn x(&self) -> f64 {
         event::touch::TouchEventPosition::x(self)
     }
@@ -319,7 +331,9 @@ impl backend::Event<LibinputInputBackend> for event::touch::TouchUpEvent {
     }
 }
 
-impl backend::TouchUpEvent<LibinputInputBackend> for event::touch::TouchUpEvent {
+impl backend::TouchUpEvent<LibinputInputBackend> for event::touch::TouchUpEvent {}
+
+impl backend::TouchEvent<LibinputInputBackend> for event::touch::TouchUpEvent {
     fn slot(&self) -> backend::TouchSlot {
         event::touch::TouchEventSlot::slot(self).into()
     }
@@ -335,7 +349,9 @@ impl backend::Event<LibinputInputBackend> for event::touch::TouchCancelEvent {
     }
 }
 
-impl backend::TouchCancelEvent<LibinputInputBackend> for event::touch::TouchCancelEvent {
+impl backend::TouchCancelEvent<LibinputInputBackend> for event::touch::TouchCancelEvent {}
+
+impl backend::TouchEvent<LibinputInputBackend> for event::touch::TouchCancelEvent {
     fn slot(&self) -> backend::TouchSlot {
         event::touch::TouchEventSlot::slot(self).into()
     }
