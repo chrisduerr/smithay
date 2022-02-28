@@ -5,6 +5,7 @@ use crate::{
     backend::input::{
         self, Axis, AxisSource, ButtonState, Device, DeviceCapability, InputBackend, KeyState,
         KeyboardKeyEvent, PointerAxisEvent, PointerButtonEvent, PointerMotionAbsoluteEvent, UnusedEvent,
+        PositionEvent
     },
     utils::{Logical, Size},
 };
@@ -204,7 +205,8 @@ impl input::Event<X11Input> for X11MouseMovedEvent {
     }
 }
 
-impl PointerMotionAbsoluteEvent<X11Input> for X11MouseMovedEvent {
+impl PointerMotionAbsoluteEvent<X11Input> for X11MouseMovedEvent {}
+impl PositionEvent<X11Input> for X11MouseMovedEvent {
     fn x(&self) -> f64 {
         self.x
     }
