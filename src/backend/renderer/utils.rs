@@ -194,7 +194,6 @@ pub fn draw_surface_tree<R>(
     scale: f64,
     location: Point<i32, Logical>,
     damage: &[Rectangle<i32, Logical>],
-    log: &slog::Logger,
 ) -> Result<(), <R as Renderer>::Error>
 where
     R: Renderer + ImportAll,
@@ -233,12 +232,7 @@ where
                             Some(Ok(m)) => {
                                 e.insert(Box::new(m));
                             }
-                            Some(Err(err)) => {
-                                slog::warn!(log, "Error loading buffer: {}", err);
-                            }
-                            None => {
-                                slog::error!(log, "Unknown buffer format for: {:?}", buffer);
-                            }
+                            _ => (),
                         }
                     }
                 }

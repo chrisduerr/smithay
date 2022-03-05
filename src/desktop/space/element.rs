@@ -221,7 +221,7 @@ where
         scale: f64,
         location: Point<i32, Logical>,
         damage: &[Rectangle<i32, Logical>],
-        log: &slog::Logger,
+        _log: &slog::Logger,
     ) -> Result<(), <R as Renderer>::Error> {
         crate::backend::renderer::utils::draw_surface_tree(
             renderer,
@@ -230,7 +230,6 @@ where
             scale,
             location,
             damage,
-            log,
         )
     }
 }
