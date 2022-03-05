@@ -103,14 +103,13 @@ pub fn on_commit_buffer_handler(surface: &WlSurface) {
 /// Note: This element will render nothing, if you are not using
 /// [`crate::backend::renderer::utils::on_commit_buffer_handler`]
 /// to let smithay handle buffer management.
-pub fn draw_surface_tree<R, E, F, T>(
+pub fn draw_surface_tree<'a, R, E, F, T>(
     renderer: &mut R,
     frame: &mut F,
     surface: &WlSurface,
     scale: f64,
     location: Point<i32, Logical>,
     damage: &[Rectangle<i32, Logical>],
-    log: &slog::Logger,
 ) -> Result<(), R::Error>
 where
     R: Renderer<Error = E, TextureId = T, Frame = F> + ImportAll,
@@ -147,12 +146,7 @@ where
                             Some(Ok(m)) => {
                                 data.texture = Some(Box::new(m));
                             }
-                            Some(Err(err)) => {
-                                slog::warn!(log, "Error loading buffer: {}", err);
-                            }
-                            None => {
-                                slog::error!(log, "Unknown buffer format for: {:?}", buffer);
-                            }
+                            _ => (),
                         }
                     }
                 }
