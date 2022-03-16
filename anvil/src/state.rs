@@ -17,11 +17,13 @@ use smithay::{
     utils::{Logical, Point},
     wayland::{
         data_device::{default_action_chooser, init_data_device, set_data_device_focus, DataDeviceEvent},
+        input_method::{init_input_method_manager_global, InputMethodHandle, InputMethodSeatTrait},
         output::{xdg::init_xdg_output_manager, Output},
         seat::{CursorImageStatus, KeyboardHandle, PointerHandle, Seat, XkbConfig},
         shell::xdg::decoration::{init_xdg_decoration_manager, XdgDecorationRequest},
         shm::init_shm_global,
         tablet_manager::{init_tablet_manager_global, TabletSeatTrait},
+        text_input::{init_text_input_manager_global, TextInputHandle, TextInputSeatTrait},
         xdg_activation::{init_xdg_activation_global, XdgActivationEvent},
     },
 };
@@ -46,6 +48,8 @@ pub struct AnvilState<BackendData> {
     // input-related fields
     pub pointer: PointerHandle,
     pub keyboard: KeyboardHandle,
+    pub input_method: InputMethodHandle,
+    pub text_input: TextInputHandle,
     pub suppressed_keys: Vec<u32>,
     pub pointer_location: Point<f64, Logical>,
     pub cursor_status: Arc<Mutex<CursorImageStatus>>,
@@ -203,6 +207,12 @@ impl<BackendData: Backend + 'static> AnvilState<BackendData> {
             })
             .expect("Failed to initialize the keyboard");
 
+        init_input_method_manager_global(&mut display.borrow_mut());
+        init_text_input_manager_global(&mut display.borrow_mut());
+
+        let input_method = seat.add_input_method(200, 25, XkbConfig::default());
+        let text_input = seat.add_text_input();
+
         #[cfg(feature = "xwayland")]
         let xwayland = {
             let (xwayland, channel) = XWayland::new(handle.clone(), display.clone(), log.clone());
@@ -232,6 +242,8 @@ impl<BackendData: Backend + 'static> AnvilState<BackendData> {
             socket_name,
             pointer,
             keyboard,
+            input_method,
+            text_input,
             suppressed_keys: Vec::new(),
             cursor_status,
             pointer_location: (0.0, 0.0).into(),

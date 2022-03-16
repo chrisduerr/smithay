@@ -186,6 +186,7 @@ impl PopupManager {
         })
     }
 
+    /// Dismiss a popup.
     pub fn dismiss_popup(surface: &WlSurface, popup: &PopupKind) -> Result<(), DeadResource> {
         with_states(surface, |states| {
             let tree = states.data_map.get::<PopupTree>();
