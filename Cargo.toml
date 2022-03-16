@@ -59,6 +59,7 @@ slog-term = "2.3"
 [build-dependencies]
 gl_generator = { version = "0.14", optional = true }
 pkg-config = { version = "0.3.17", optional = true }
+wayland-scanner = { version = "0.29.4" }
 
 [features]
 default = ["backend_drm", "backend_gbm", "backend_libinput", "backend_udev", "backend_session_logind", "backend_winit", "desktop", "renderer_gl", "xwayland", "wayland_frontend", "slog-stdlog", "backend_x11"]

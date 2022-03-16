@@ -92,7 +92,7 @@ enum GrabStatus {
     Borrowed,
 }
 
-struct KbdInternal {
+pub(crate) struct KbdInternal {
     known_kbds: Vec<WlKeyboard>,
     focus: Option<WlSurface>,
     pending_focus: Option<WlSurface>,
@@ -213,7 +213,7 @@ impl KbdInternal {
         serialized.into()
     }
 
-    fn with_focused_kbds<F>(&self, mut f: F)
+    pub(crate) fn with_focused_kbds<F>(&self, mut f: F)
     where
         F: FnMut(&WlKeyboard, &WlSurface),
     {
@@ -303,8 +303,8 @@ where
 }
 
 #[derive(Debug)]
-struct KbdRc {
-    internal: RefCell<KbdInternal>,
+pub(crate) struct KbdRc {
+    pub(crate) internal: RefCell<KbdInternal>,
     keymap: String,
     logger: ::slog::Logger,
 }
@@ -413,7 +413,7 @@ pub trait KeyboardGrab {
 ///   details.
 #[derive(Debug, Clone)]
 pub struct KeyboardHandle {
-    arc: Rc<KbdRc>,
+    pub(crate) arc: Rc<KbdRc>,
 }
 
 impl KeyboardHandle {
