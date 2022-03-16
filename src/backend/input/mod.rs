@@ -2,6 +2,8 @@
 
 use std::path::PathBuf;
 
+use wayland_server::protocol::wl_keyboard::KeyState as WlKeyState;
+
 mod tablet;
 
 pub use tablet::{
@@ -83,6 +85,25 @@ pub enum KeyState {
     Released,
     /// Key is pressed
     Pressed,
+}
+
+impl From<KeyState> for WlKeyState {
+    fn from(state: KeyState) -> WlKeyState {
+        match state {
+            KeyState::Pressed => WlKeyState::Pressed,
+            KeyState::Released => WlKeyState::Released,
+        }
+    }
+}
+
+impl From<u32> for KeyState {
+    fn from(state: u32) -> Self {
+        if state == 1 {
+            KeyState::Pressed
+        } else {
+            KeyState::Released
+        }
+    }
 }
 
 /// Trait for keyboard event

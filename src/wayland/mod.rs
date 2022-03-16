@@ -65,6 +65,7 @@ pub mod shell;
 pub mod shm;
 pub mod tablet_manager;
 pub mod text_input;
+pub mod virtual_keyboard;
 pub mod xdg_activation;
 pub mod xdg_foreign;
 

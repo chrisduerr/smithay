@@ -42,8 +42,8 @@ mod touch;
 
 pub use self::{
     keyboard::{
-        keysyms, Error as KeyboardError, FilterResult, GrabStartData as KeyboardGrabStartData, KeyboardGrab,
-        KeyboardHandle, KeyboardInnerHandle, Keysym, KeysymHandle, ModifiersState, XkbConfig,
+        keysyms, Error as KeyboardError, FilterResult, GrabStartData as KeyboardGrabStartData, GrabStartData,
+        KeyboardGrab, KeyboardHandle, KeyboardInnerHandle, Keysym, KeysymHandle, ModifiersState, XkbConfig,
     },
     pointer::{
         AxisFrame, CursorImageAttributes, CursorImageStatus, GrabStartData as PointerGrabStartData,
