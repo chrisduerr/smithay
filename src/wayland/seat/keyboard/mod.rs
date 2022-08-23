@@ -37,7 +37,7 @@ enum GrabStatus {
     Borrowed,
 }
 
-struct KbdInternal {
+pub(crate) struct KbdInternal {
     known_kbds: Vec<WlKeyboard>,
     focus: Option<(WlSurface, Serial)>,
     pending_focus: Option<WlSurface>,
@@ -158,7 +158,7 @@ impl KbdInternal {
         serialized.into()
     }
 
-    fn with_focused_kbds<F>(&self, mut f: F)
+    pub(crate) fn with_focused_kbds<F>(&self, mut f: F)
     where
         F: FnMut(&WlKeyboard, &WlSurface),
     {
@@ -216,8 +216,8 @@ pub enum Error {
 }
 
 #[derive(Debug)]
-struct KbdRc {
-    internal: Mutex<KbdInternal>,
+pub(crate) struct KbdRc {
+    pub(crate) internal: Mutex<KbdInternal>,
     keymap: KeymapFile,
     logger: ::slog::Logger,
 }
@@ -334,7 +334,7 @@ pub trait KeyboardGrab {
 ///   details.
 #[derive(Debug, Clone)]
 pub struct KeyboardHandle {
-    arc: Arc<KbdRc>,
+    pub(crate) arc: Arc<KbdRc>,
 }
 
 impl KeyboardHandle {
@@ -615,7 +615,7 @@ where
 /// sends event to the client
 #[derive(Debug)]
 pub struct KeyboardInnerHandle<'a> {
-    inner: &'a mut KbdInternal,
+    pub(crate) inner: &'a mut KbdInternal,
     logger: ::slog::Logger,
 }
 
