@@ -128,6 +128,15 @@ fn for_each_focused_kbds<D: SeatHandler + 'static>(
     }
 }
 
+pub(crate) fn with_focused_kbds<D: SeatHandler + 'static>(seat: &Seat<D>, mut f: impl FnMut(WlKeyboard)) {
+    if let Some(keyboard) = seat.get_keyboard() {
+        let inner = keyboard.arc.known_kbds.lock().unwrap();
+        for kbd in &*inner {
+            f(kbd.clone())
+        }
+    }
+}
+
 fn serialize_pressed_keys(keys: Vec<u32>) -> Vec<u8> {
     let serialized = unsafe { ::std::slice::from_raw_parts(keys.as_ptr() as *const u8, keys.len() * 4) };
     serialized.into()

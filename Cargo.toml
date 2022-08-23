@@ -40,7 +40,7 @@ indexmap = { version = "1.7", optional = true }
 lazy_static = "1"
 libc = "0.2.103"
 libseat= { version = "0.1.1", optional = true }
-libloading = { version="0.7.0", optional = true } 
+libloading = { version="0.7.0", optional = true }
 nix = "0.22"
 once_cell = "1.8.0"
 rand = "0.8.4"
@@ -50,13 +50,13 @@ slog-stdlog = { version = "4", optional = true }
 tempfile = { version = "3.0", optional = true }
 thiserror = "1.0.25"
 udev = { version = "0.6", optional = true }
-wayland-egl = { version = "=0.30.0-beta.8", optional = true }
-wayland-protocols = { version = "=0.30.0-beta.8", features = ["unstable", "staging", "server"], optional = true }
-wayland-protocols-wlr = { version = "=0.1.0-beta.8", features = ["server"]}
-wayland-protocols-misc = { version = "=0.1.0-beta.8", features = ["server"]}
-wayland-server = { version = "=0.30.0-beta.8", optional = true }
-wayland-sys = { version = "=0.30.0-beta.8", optional = true }
-wayland-backend = { version = "=0.1.0-beta.8", optional = true }
+wayland-egl = { git = "https://github.com/smithay/wayland-rs", rev = "1f38f9abfa70770b7d8af134bc971f8242dd644d", optional = true }
+wayland-protocols = { git = "https://github.com/smithay/wayland-rs", rev = "1f38f9abfa70770b7d8af134bc971f8242dd644d", features = ["unstable", "staging", "server"], optional = true }
+wayland-protocols-wlr = { git = "https://github.com/smithay/wayland-rs", rev = "1f38f9abfa70770b7d8af134bc971f8242dd644d", features = ["server"]}
+wayland-protocols-misc = { git = "https://github.com/smithay/wayland-rs", rev = "1f38f9abfa70770b7d8af134bc971f8242dd644d", features = ["server"]}
+wayland-server = { git = "https://github.com/smithay/wayland-rs", rev = "1f38f9abfa70770b7d8af134bc971f8242dd644d", optional = true }
+wayland-sys = { git = "https://github.com/smithay/wayland-rs", rev = "1f38f9abfa70770b7d8af134bc971f8242dd644d", optional = true }
+wayland-backend = { git = "https://github.com/smithay/wayland-rs", rev = "1f38f9abfa70770b7d8af134bc971f8242dd644d" }
 winit = { version = "0.27.1", default-features = false, features = ["wayland", "wayland-dlopen", "x11"], optional = true }
 x11rb = { version = "0.10.0", optional = true }
 xkbcommon = "0.4.0"
