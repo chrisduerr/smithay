@@ -62,6 +62,7 @@ pub mod tablet_manager;
 pub mod text_input;
 pub mod viewporter;
 pub mod xdg_activation;
+pub mod virtual_keyboard;
 
 /// A global [`SerialCounter`] for use in your compositor.
 ///
