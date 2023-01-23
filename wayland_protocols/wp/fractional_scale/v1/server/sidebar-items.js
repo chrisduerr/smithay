@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["__interfaces",""],["wp_fractional_scale_manager_v1","fractional surface scale information"],["wp_fractional_scale_v1","fractional scale interface to a wl_surface"]]};

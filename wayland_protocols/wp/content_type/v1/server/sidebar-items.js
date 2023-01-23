@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["__interfaces",""],["wp_content_type_manager_v1","surface content type manager"],["wp_content_type_v1","content type object for a surface"]]};

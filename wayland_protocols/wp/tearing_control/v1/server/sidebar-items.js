@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["__interfaces",""],["wp_tearing_control_manager_v1","protocol for tearing control"],["wp_tearing_control_v1","per-surface tearing control interface"]]};

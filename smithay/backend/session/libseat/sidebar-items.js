@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Error","Errors related to direct/tty sessions"]],"struct":[["LibSeatSession","[`Session`] via the libseat"],["LibSeatSessionNotifier","[`SessionNotifier`] via the libseat"]]};

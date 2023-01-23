@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["__interfaces",""],["xwayland_shell_v1","context object for Xwayland shell"],["xwayland_surface_v1","interface for associating Xwayland windows to wl_surfaces"]]};
