@@ -9,11 +9,8 @@
 //!
 //! ```
 //! use smithay::delegate_seat;
-//! # use smithay::delegate_compositor;
 //! use smithay::input::{Seat, SeatState, SeatHandler, pointer::CursorImageStatus};
 //! use smithay::reexports::wayland_server::{Display, protocol::wl_surface::WlSurface};
-//! # use smithay::wayland::compositor::{CompositorHandler, CompositorState, CompositorClientState};
-//! # use smithay::reexports::wayland_server::Client;
 //!
 //! # struct State { seat_state: SeatState<Self> };
 //! # let mut display = Display::<State>::new().unwrap();
@@ -45,13 +42,6 @@
 //!     }
 //! }
 //! delegate_seat!(State);
-//!
-//! # impl CompositorHandler for State {
-//! #     fn compositor_state(&mut self) -> &mut CompositorState { unimplemented!() }
-//! #     fn client_compositor_state<'a>(&self, client: &'a Client) -> &'a CompositorClientState { unimplemented!() }
-//! #     fn commit(&mut self, surface: &WlSurface) {}
-//! # }
-//! # delegate_compositor!(State);
 //! ```
 //!
 //! ### Run usage
@@ -91,8 +81,6 @@ use wayland_server::{
     },
     Client, DataInit, Dispatch, DisplayHandle, GlobalDispatch, New, Resource,
 };
-
-use super::compositor::CompositorHandler;
 
 /// Focused objects that *might* have an underlying wl_surface.
 pub trait WaylandFocus {
@@ -254,13 +242,12 @@ where
     D: Dispatch<WlPointer, PointerUserData<D>>,
     D: Dispatch<WlTouch, TouchUserData<D>>,
     D: SeatHandler,
-    D: CompositorHandler,
     <D as SeatHandler>::KeyboardFocus: WaylandFocus,
     D: 'static,
 {
     fn request(
-        state: &mut D,
-        client: &wayland_server::Client,
+        _state: &mut D,
+        _client: &wayland_server::Client,
         _resource: &WlSeat,
         request: wl_seat::Request,
         data: &SeatUserData<D>,
@@ -271,12 +258,10 @@ where
             wl_seat::Request::GetPointer { id } => {
                 let inner = data.arc.inner.lock().unwrap();
 
-                let client_scale = state.client_compositor_state(client).clone_client_scale();
                 let pointer = data_init.init(
                     id,
                     PointerUserData {
                         handle: inner.pointer.clone(),
-                        client_scale,
                     },
                 );
 
@@ -306,12 +291,10 @@ where
             wl_seat::Request::GetTouch { id } => {
                 let inner = data.arc.inner.lock().unwrap();
 
-                let client_scale = state.client_compositor_state(client).clone_client_scale();
                 let touch = data_init.init(
                     id,
                     TouchUserData {
                         handle: inner.touch.clone(),
-                        client_scale,
                     },
                 );
 

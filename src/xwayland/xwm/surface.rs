@@ -10,16 +10,13 @@ use crate::{
         touch::TouchTarget,
         Seat, SeatHandler,
     },
-    utils::{user_data::UserDataMap, Client, IsAlive, Logical, Rectangle, Serial, Size},
+    utils::{user_data::UserDataMap, IsAlive, Logical, Rectangle, Serial, Size},
     wayland::compositor,
 };
 use encoding_rs::WINDOWS_1252;
 use std::{
     collections::HashSet,
-    sync::{
-        atomic::{AtomicU32, Ordering},
-        Arc, Mutex, Weak,
-    },
+    sync::{Arc, Mutex, Weak},
 };
 use tracing::warn;
 use wayland_server::protocol::wl_surface::WlSurface;
@@ -35,13 +32,12 @@ use x11rb::{
     wrapper::ConnectionExt,
 };
 
-use super::{send_configure_notify, X11Wm, XwmId};
+use super::{send_configure_notify, XwmId};
 
 /// X11 window managed by an [`X11Wm`](super::X11Wm)
 #[derive(Debug, Clone)]
 pub struct X11Surface {
     xwm: Option<XwmId>,
-    client_scale: Option<Arc<AtomicU32>>,
     window: X11Window,
     override_redirect: bool,
     conn: Weak<RustConnection>,
@@ -159,7 +155,7 @@ impl X11Surface {
     /// - `atoms` Atoms struct as defined by the [xwm module](super).
     /// - `geometry` Initial geometry of the window
     pub fn new(
-        xwm: Option<&X11Wm>,
+        xwm: impl Into<Option<XwmId>>,
         window: u32,
         override_redirect: bool,
         conn: Weak<RustConnection>,
@@ -167,8 +163,7 @@ impl X11Surface {
         geometry: Rectangle<i32, Logical>,
     ) -> X11Surface {
         X11Surface {
-            xwm: xwm.map(|wm| wm.id),
-            client_scale: xwm.map(|wm| wm.client_scale.clone()),
+            xwm: xwm.into(),
             window,
             override_redirect,
             conn,
@@ -278,13 +273,7 @@ impl X11Surface {
 
         if let Some(conn) = self.conn.upgrade() {
             let mut state = self.state.lock().unwrap();
-            let client_scale = self
-                .client_scale
-                .as_ref()
-                .map(|s| s.load(Ordering::Acquire))
-                .unwrap_or(1);
-            let logical_rect = rect.unwrap_or(state.geometry);
-            let rect = logical_rect.to_client(client_scale as i32);
+            let rect = rect.unwrap_or(state.geometry);
             let aux = ConfigureWindowAux::default()
                 .x(rect.loc.x)
                 .y(rect.loc.y)
@@ -304,7 +293,7 @@ impl X11Surface {
             }
             conn.flush()?;
 
-            state.geometry = logical_rect;
+            state.geometry = rect;
         }
         Ok(())
     }
@@ -394,50 +383,32 @@ impl X11Surface {
 
     /// Returns the suggested minimum size of the underlying X11 window
     pub fn min_size(&self) -> Option<Size<i32, Logical>> {
-        let client_scale = self
-            .client_scale
-            .as_ref()
-            .map(|s| s.load(Ordering::Acquire))
-            .unwrap_or(1);
         let state = self.state.lock().unwrap();
         state
             .normal_hints
             .as_ref()
             .and_then(|hints| hints.min_size)
-            .map(Size::<i32, Client>::from)
-            .map(|s| s.to_logical(client_scale as i32))
+            .map(Size::from)
     }
 
     /// Returns the suggested minimum size of the underlying X11 window
     pub fn max_size(&self) -> Option<Size<i32, Logical>> {
-        let client_scale = self
-            .client_scale
-            .as_ref()
-            .map(|s| s.load(Ordering::Acquire))
-            .unwrap_or(1);
         let state = self.state.lock().unwrap();
         state
             .normal_hints
             .as_ref()
             .and_then(|hints| hints.max_size)
-            .map(Size::<i32, Client>::from)
-            .map(|s| s.to_logical(client_scale as i32))
+            .map(Size::from)
     }
 
     /// Returns the suggested base size of the underlying X11 window
     pub fn base_size(&self) -> Option<Size<i32, Logical>> {
-        let client_scale = self
-            .client_scale
-            .as_ref()
-            .map(|s| s.load(Ordering::Acquire))
-            .unwrap_or(1);
         let state = self.state.lock().unwrap();
         let res = state
             .normal_hints
             .as_ref()
             .and_then(|hints| hints.base_size)
-            .map(Size::<i32, Client>::from)
-            .map(|s| s.to_logical(client_scale as i32));
+            .map(Size::from);
         std::mem::drop(state);
         res.or_else(|| self.min_size())
     }

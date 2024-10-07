@@ -10,9 +10,6 @@
 //! ```
 //! use smithay::wayland::viewporter::ViewporterState;
 //! use smithay::delegate_viewporter;
-//! # use smithay::delegate_compositor;
-//! # use smithay::wayland::compositor::{CompositorHandler, CompositorState, CompositorClientState};
-//! # use smithay::reexports::wayland_server::{Client, protocol::wl_surface::WlSurface};
 //!
 //! # struct State;
 //! # let mut display = wayland_server::Display::<State>::new().unwrap();
@@ -24,13 +21,6 @@
 //!
 //! // implement Dispatch for the Viewporter types
 //! delegate_viewporter!(State);
-//!
-//! # impl CompositorHandler for State {
-//! #     fn compositor_state(&mut self) -> &mut CompositorState { unimplemented!() }
-//! #     fn client_compositor_state<'a>(&self, client: &'a Client) -> &'a CompositorClientState { unimplemented!() }
-//! #     fn commit(&mut self, surface: &WlSurface) {}
-//! # }
-//! # delegate_compositor!(State);
 //!
 //! // You're now ready to go!
 //! ```
@@ -61,9 +51,9 @@ use wayland_server::{
     backend::GlobalId, protocol::wl_surface, Dispatch, DisplayHandle, GlobalDispatch, Resource, Weak,
 };
 
-use crate::utils::{Client, Logical, Rectangle, Size};
+use crate::utils::{Logical, Rectangle, Size};
 
-use super::compositor::{self, with_states, Cacheable, CompositorHandler, SurfaceData};
+use super::compositor::{self, with_states, Cacheable, SurfaceData};
 
 /// State of the wp_viewporter Global
 #[derive(Debug)]
@@ -193,11 +183,10 @@ where
     D: GlobalDispatch<wp_viewporter::WpViewporter, ()>,
     D: Dispatch<wp_viewporter::WpViewporter, ()>,
     D: Dispatch<wp_viewport::WpViewport, ViewportState>,
-    D: CompositorHandler,
 {
     fn request(
-        state: &mut D,
-        client: &wayland_server::Client,
+        _state: &mut D,
+        _client: &wayland_server::Client,
         resource: &wp_viewport::WpViewport,
         request: <wp_viewport::WpViewport as wayland_server::Resource>::Request,
         data: &ViewportState,
@@ -289,8 +278,7 @@ where
                     let size = if is_unset {
                         None
                     } else {
-                        let client_scale = state.client_compositor_state(client).client_scale();
-                        let dst = Size::<_, Client>::from((width, height)).to_logical(client_scale as i32);
+                        let dst = Size::from((width, height));
                         trace!(surface = ?surface, size = ?dst, "setting surface viewport destination size");
                         Some(dst)
                     };

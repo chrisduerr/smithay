@@ -96,10 +96,7 @@
 //! delegate_pointer_gestures!(State);
 //! ```
 
-use std::sync::{
-    atomic::{AtomicU32, Ordering},
-    Arc, Mutex,
-};
+use std::sync::Mutex;
 
 use wayland_protocols::wp::pointer_gestures::zv1::server::{
     zwp_pointer_gesture_hold_v1::{self, ZwpPointerGestureHoldV1},
@@ -201,9 +198,7 @@ impl WpPointerGesturePointerHandle {
             let mut ongoing = data.in_progress_on.lock().unwrap();
             // Check that the ongoing gesture is for this surface.
             if ongoing.as_ref() == Some(surface) {
-                let client_scale = data.client_scale.load(Ordering::Acquire);
-                let delta = event.delta.to_client(client_scale as f64);
-                gesture.update(event.time, delta.x, delta.y);
+                gesture.update(event.time, event.delta.x, event.delta.y);
             } else if ongoing.take().is_some() {
                 // If it was for a different surface, cancel it.
                 gesture.end(SERIAL_COUNTER.next_serial().into(), event.time, 1);
@@ -258,9 +253,13 @@ impl WpPointerGesturePointerHandle {
             let mut ongoing = data.in_progress_on.lock().unwrap();
             // Check that the ongoing gesture is for this surface.
             if ongoing.as_ref() == Some(surface) {
-                let client_scale = data.client_scale.load(Ordering::Acquire);
-                let delta = event.delta.to_client(client_scale as f64);
-                gesture.update(event.time, delta.x, delta.y, event.scale, event.rotation);
+                gesture.update(
+                    event.time,
+                    event.delta.x,
+                    event.delta.y,
+                    event.scale,
+                    event.rotation,
+                );
             } else if ongoing.take().is_some() {
                 // If it was for a different surface, cancel it.
                 gesture.end(SERIAL_COUNTER.next_serial().into(), event.time, 1);
@@ -368,7 +367,6 @@ pub struct PointerGestureUserData<D: SeatHandler> {
     handle: Option<PointerHandle<D>>,
     /// This gesture is in the middle between its begin() and end() on this surface.
     pub(crate) in_progress_on: Mutex<Option<WlSurface>>,
-    client_scale: Arc<AtomicU32>,
 }
 
 /// State of the pointer gestures
@@ -420,38 +418,35 @@ where
     ) {
         match request {
             zwp_pointer_gestures_v1::Request::GetSwipeGesture { id, pointer } => {
-                let data = pointer.data::<PointerUserData<D>>().unwrap();
+                let handle = &pointer.data::<PointerUserData<D>>().unwrap().handle;
                 let user_data = PointerGestureUserData {
-                    handle: data.handle.clone(),
+                    handle: handle.clone(),
                     in_progress_on: Mutex::new(None),
-                    client_scale: data.client_scale.clone(),
                 };
                 let gesture = data_init.init(id, user_data);
-                if let Some(handle) = &data.handle {
+                if let Some(handle) = handle {
                     handle.wp_pointer_gestures.new_swipe_gesture(gesture);
                 }
             }
             zwp_pointer_gestures_v1::Request::GetPinchGesture { id, pointer } => {
-                let data = pointer.data::<PointerUserData<D>>().unwrap();
+                let handle = &pointer.data::<PointerUserData<D>>().unwrap().handle;
                 let user_data = PointerGestureUserData {
-                    handle: data.handle.clone(),
+                    handle: handle.clone(),
                     in_progress_on: Mutex::new(None),
-                    client_scale: data.client_scale.clone(),
                 };
                 let gesture = data_init.init(id, user_data);
-                if let Some(handle) = &data.handle {
+                if let Some(handle) = handle {
                     handle.wp_pointer_gestures.new_pinch_gesture(gesture);
                 }
             }
             zwp_pointer_gestures_v1::Request::GetHoldGesture { id, pointer } => {
-                let data = pointer.data::<PointerUserData<D>>().unwrap();
+                let handle = &pointer.data::<PointerUserData<D>>().unwrap().handle;
                 let user_data = PointerGestureUserData {
-                    handle: data.handle.clone(),
+                    handle: handle.clone(),
                     in_progress_on: Mutex::new(None),
-                    client_scale: data.client_scale.clone(),
                 };
                 let gesture = data_init.init(id, user_data);
-                if let Some(handle) = &data.handle {
+                if let Some(handle) = handle {
                     handle.wp_pointer_gestures.new_hold_gesture(gesture);
                 }
             }

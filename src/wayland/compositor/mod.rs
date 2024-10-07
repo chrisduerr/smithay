@@ -112,8 +112,6 @@ mod transaction;
 mod tree;
 
 use std::cell::RefCell;
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::Arc;
 use std::{any::Any, sync::Mutex};
 
 pub use self::cache::{Cacheable, MultiCache};
@@ -246,8 +244,6 @@ pub struct SurfaceAttributes {
     /// An example possibility would be to trigger it once the frame
     /// associated with this commit has been displayed on the screen.
     pub frame_callbacks: Vec<wl_callback::WlCallback>,
-
-    pub(crate) client_scale: u32,
 }
 
 impl Default for SurfaceAttributes {
@@ -261,7 +257,6 @@ impl Default for SurfaceAttributes {
             input_region: None,
             damage: Vec::new(),
             frame_callbacks: Vec::new(),
-            client_scale: 1,
         }
     }
 }
@@ -611,19 +606,9 @@ pub struct CompositorState {
 }
 
 /// Per-client state of a compositor
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct CompositorClientState {
     queue: Mutex<Option<TransactionQueue>>,
-    scale_override: Arc<AtomicU32>,
-}
-
-impl Default for CompositorClientState {
-    fn default() -> Self {
-        CompositorClientState {
-            queue: Mutex::new(None),
-            scale_override: Arc::new(AtomicU32::new(1)),
-        }
-    }
 }
 
 impl CompositorClientState {
@@ -640,32 +625,6 @@ impl CompositorClientState {
         for transaction in transactions {
             transaction.apply(dh, state)
         }
-    }
-
-    /// Set an additionally mapping between smithay's `Logical` coordinate space
-    /// and this clients logical coordinate space.
-    ///
-    /// This is used in the same way as if the client was setting the
-    /// surface.buffer_scale on every surface i.e a value of 2.0 will make
-    /// the windows appear smaller on a regular DPI monitor.
-    ///
-    /// Only the minimal set of protocols used by xwayland are guaranteed to be supported.
-    ///
-    /// Buffer sizes are unaffected.
-    pub fn set_client_scale(&self, new_scale: u32) {
-        self.scale_override.store(new_scale, Ordering::Release);
-    }
-
-    /// Get the scale factor of the additional mapping between smithay's `Logical`
-    /// coordinate space and this clients logical coordinate space.
-    ///
-    /// This is mainly intended to support out-of-tree protocol implementations.
-    pub fn client_scale(&self) -> u32 {
-        self.scale_override.load(Ordering::Acquire)
-    }
-
-    pub(crate) fn clone_client_scale(&self) -> Arc<AtomicU32> {
-        self.scale_override.clone()
     }
 }
 

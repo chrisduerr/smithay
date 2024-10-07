@@ -92,7 +92,7 @@
 //! ```
 
 use crate::{
-    utils::{x11rb::X11Source, Client, Coordinate, Logical, Point, Rectangle, Size},
+    utils::{x11rb::X11Source, Logical, Point, Rectangle, Size},
     wayland::{
         selection::SelectionTarget,
         xwayland_shell::{self, XWaylandShellHandler},
@@ -108,13 +108,10 @@ use std::{
         io::{AsFd, BorrowedFd, OwnedFd},
         net::UnixStream,
     },
-    sync::{
-        atomic::{AtomicU32, Ordering},
-        Arc,
-    },
+    sync::Arc,
 };
 use tracing::{debug, debug_span, error, info, trace, warn};
-use wayland_server::Resource;
+use wayland_server::{Client, Resource};
 
 pub use x11rb::protocol::xproto::Window as X11Window;
 use x11rb::{
@@ -393,7 +390,6 @@ pub trait XwmHandler {
 pub struct X11Wm {
     id: XwmId,
     conn: Arc<RustConnection>,
-    client_scale: Arc<AtomicU32>,
     screen: Screen,
     wm_window: X11Window,
     atoms: Atoms,
@@ -701,7 +697,7 @@ impl X11Wm {
     pub fn start_wm<D>(
         handle: LoopHandle<'static, D>,
         connection: UnixStream,
-        client: wayland_server::Client,
+        client: Client,
     ) -> Result<Self, Box<dyn std::error::Error>>
     where
         D: XwmHandler,
@@ -839,11 +835,12 @@ impl X11Wm {
         let conn = Arc::new(conn);
         let source = X11Source::new(Arc::clone(&conn), win, atoms._SMITHAY_CLOSE_CONNECTION);
 
-        let client_data = client.get_data::<XWaylandClientData>().unwrap();
-        let client_scale = client_data.compositor_state.clone_client_scale();
-
         // We need this for the commit hook.
-        client_data.user_data().insert_if_missing(|| id);
+        client
+            .get_data::<XWaylandClientData>()
+            .unwrap()
+            .user_data()
+            .insert_if_missing(|| id);
 
         let _xfixes_data = conn
             .query_extension(x11rb::protocol::xfixes::X11_EXTENSION_NAME.as_bytes())?
@@ -861,7 +858,6 @@ impl X11Wm {
         let wm = Self {
             id,
             conn,
-            client_scale,
             screen,
             atoms,
             xsettings,
@@ -1344,19 +1340,17 @@ where
             }
 
             let geo = conn.get_geometry(n.window)?.reply()?;
-            let geometry = Rectangle::<i32, Client>::from_loc_and_size(
-                (geo.x as i32, geo.y as i32),
-                (geo.width as i32, geo.height as i32),
-            )
-            .to_logical(xwm.client_scale.load(Ordering::Acquire) as i32);
 
             let surface = X11Surface::new(
-                Some(xwm),
+                xwm_id,
                 n.window,
                 n.override_redirect,
                 Arc::downgrade(&conn),
                 xwm.atoms,
-                geometry,
+                Rectangle::from_loc_and_size(
+                    (geo.x as i32, geo.y as i32),
+                    (geo.width as i32, geo.height as i32),
+                ),
             );
             surface.update_properties()?;
             xwm.windows.push(surface.clone());
@@ -1458,30 +1452,27 @@ where
         Event::ConfigureRequest(r) => {
             if let Some(surface) = xwm.windows.iter().find(|x| x.window_id() == r.window).cloned() {
                 drop(_guard);
-
-                let client_scale = xwm.client_scale.load(Ordering::Acquire);
-
                 // Pass the request to downstream to decide
                 state.configure_request(
                     xwm_id,
                     surface.clone(),
                     if u16::from(r.value_mask) & u16::from(ConfigWindow::X) != 0 {
-                        Some((r.x as i32).downscale(client_scale as i32))
+                        Some(i32::from(r.x))
                     } else {
                         None
                     },
                     if u16::from(r.value_mask) & u16::from(ConfigWindow::Y) != 0 {
-                        Some((r.y as i32).downscale(client_scale as i32))
+                        Some(i32::from(r.y))
                     } else {
                         None
                     },
                     if u16::from(r.value_mask) & u16::from(ConfigWindow::WIDTH) != 0 {
-                        Some((r.width as u32).downscale(client_scale))
+                        Some(u32::from(r.width))
                     } else {
                         None
                     },
                     if u16::from(r.value_mask) & u16::from(ConfigWindow::HEIGHT) != 0 {
-                        Some((r.height as u32).downscale(client_scale))
+                        Some(u32::from(r.height))
                     } else {
                         None
                     },
@@ -1516,14 +1507,6 @@ where
         }
         Event::ConfigureNotify(n) => {
             trace!(window = ?n, "configured X11 Window");
-
-            let client_scale = xwm.client_scale.load(Ordering::Acquire);
-            let geometry = Rectangle::<i32, Client>::from_loc_and_size(
-                (n.x as i32, n.y as i32),
-                (n.width as i32, n.height as i32),
-            )
-            .to_logical(client_scale as i32);
-
             if let Some(surface) = xwm
                 .windows
                 .iter()
@@ -1534,7 +1517,7 @@ where
                 state.configure_notify(
                     xwm_id,
                     surface,
-                    geometry,
+                    Rectangle::from_loc_and_size((n.x as i32, n.y as i32), (n.width as i32, n.height as i32)),
                     if n.above_sibling == x11rb::NONE {
                         None
                     } else {
@@ -1543,6 +1526,10 @@ where
                 );
             } else if let Some(surface) = xwm.windows.iter().find(|x| x.window_id() == n.window).cloned() {
                 if surface.is_override_redirect() {
+                    let geometry = Rectangle::from_loc_and_size(
+                        (n.x as i32, n.y as i32),
+                        (n.width as i32, n.height as i32),
+                    );
                     surface.state.lock().unwrap().geometry = geometry;
                     drop(_guard);
                     state.configure_notify(
@@ -2477,7 +2464,7 @@ fn send_selection_notify_resp(
 fn send_configure_notify(
     conn: &RustConnection,
     win: &X11Window,
-    geometry: Rectangle<i32, Client>,
+    geometry: Rectangle<i32, Logical>,
     override_redirect: bool,
 ) -> Result<(), ConnectionError> {
     conn.send_event(
