@@ -7,7 +7,7 @@ pub static SERIAL_COUNTER: SerialCounter = SerialCounter::new();
 
 /// A serial type, whose comparison takes into account the wrapping-around behavior of the
 /// underlying counter.
-#[derive(Debug, Copy, Clone)]
+#[derive(Hash, Debug, Copy, Clone)]
 pub struct Serial(pub(crate) u32);
 
 impl PartialEq for Serial {
